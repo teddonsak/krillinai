@@ -1,3 +1,5 @@
+เว็บออนไลน์: https://teddonsak.github.io/krillinai/
+
 # KrillinAI Studio
 
 เว็บสร้างคลิปรีวิวแนวตั้ง (ไทย) — วิซาร์ด 5 ขั้น, พากย์ Edge/ElevenLabs/MiniMax, ซับเบิร์น
