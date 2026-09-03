@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KrillinAI Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#140e0a; --panel:#1c1510; --line:rgba(255,214,160,.12); --text:#fff7ed; --muted:#c4b5a5;
+  --accent:#e8a54b; --accent2:#34d399; --warn:#fb7185; --radius:18px;
+}
+html{background:
+  radial-gradient(1200px 500px at 10% -10%, rgba(232,165,75,.18), transparent 50%),
+  radial-gradient(900px 400px at 110% 10%, rgba(251,113,133,.12), transparent 45%),
+  var(--bg);}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Prompt,system-ui,sans-serif;min-height:100%}
+button,input,select,textarea{font-family:inherit}
+a{color:#a5b4fc}
+.app{max-width:1180px;margin:0 auto;padding:20px 20px 96px}
+header.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#5b6cff,#f59e0b);display:grid;place-items:center;font-weight:800}
+.brand h1{margin:0;font-size:18px}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.nav{display:flex;gap:8px}
+.nav button{border:0;background:transparent;color:var(--muted);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+.nav button.on{background:var(--accent);color:#fff}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:20px}
+@media(max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .preview .phone{width:min(180px,46vw)}
+  header.top{flex-direction:column;align-items:stretch;gap:10px}
+  .nav{display:grid;grid-template-columns:repeat(3,1fr)}
+  .stepper{display:flex;overflow:auto;gap:8px;padding-bottom:4px}
+  .stepper button{flex:0 0 auto;min-width:108px;min-height:44px}
+  .row.two,.row.three{grid-template-columns:1fr}
+  .styles,.presets{grid-template-columns:repeat(2,1fr)}
+  .bar-in{padding:12px 12px calc(12px + env(safe-area-inset-bottom))}
+  .app{padding:14px 14px calc(110px + env(safe-area-inset-bottom))}
+}
+.btn,.nav button,label.opt,select,input,textarea{min-height:44px}
+select,input,textarea{font-size:16px}
+.voice-note{font-size:12px;color:var(--muted);margin-top:6px}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.stepper{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}
+.stepper button{border:1px solid var(--line);background:#0e1628;color:var(--muted);border-radius:12px;padding:8px 6px;cursor:pointer;font-size:12px;font-weight:600}
+.stepper button.on{border-color:var(--accent);background:rgba(91,108,255,.18);color:#fff}
+.stepper button.done{color:#86efac}
+.wizard-step{display:none}
+.wizard-step.on{display:block}
+h2{margin:0 0 12px;font-size:16px}
+.muted{color:var(--muted);font-size:12px;margin:0 0 12px}
+.row{display:grid;gap:10px}
+.row.two{grid-template-columns:1fr 1fr}
+.row.three{grid-template-columns:1fr 1fr 1fr}
+label.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}
+label.opt:has(input:checked){border-color:var(--accent);background:rgba(91,108,255,.12)}
+input[type=text],input[type=password],input[type=number],input[type=url],select,textarea{
+  width:100%;background:#0b1222;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px
+}
+.drop{border:1.5px dashed var(--line);border-radius:14px;padding:28px;text-align:center;cursor:pointer;color:var(--muted)}
+.drop:hover{border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button,.preset{border:1px solid var(--line);background:#0b1222;color:var(--muted);border-radius:10px;padding:8px 10px;cursor:pointer;font-size:12px}
+.chips button.on,.preset.on{border-color:var(--accent);color:#fff;background:rgba(91,108,255,.18)}
+.styles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.styles button{border:1px solid var(--line);background:#0b1222;color:#cbd5e1;border-radius:10px;padding:8px;cursor:pointer;font-size:12px}
+.styles button.on{border-color:#f59e0b;background:rgba(245,158,11,.15);color:#fff;font-weight:700}
+.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:220px;overflow:auto}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(11,16,32,.92);border-top:1px solid var(--line);backdrop-filter:blur(12px)}
+.bar-in{max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;gap:12px}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}
+.btn.ghost{background:#1a2340;color:#fff}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.good{background:var(--accent2);color:#052e16}
+.phone{width:230px;margin:0 auto;aspect-ratio:9/16;border-radius:28px;border:8px solid #070b16;background:#0a0f1d;position:relative;overflow:hidden}
+.phone.ar-1-1{aspect-ratio:1/1}
+.phone.ar-16-9{aspect-ratio:16/9}
+.phone.ar-4-5{aspect-ratio:4/5}
+.phone .empty{position:absolute;inset:0;display:grid;place-items:center;color:#64748b;font-size:12px;padding:16px;text-align:center}
+
+.phone .cap{position:absolute;left:10px;right:10px;bottom:40px;text-align:center;font-weight:800;line-height:1.25;transition:.15s}
+.phone .cap[data-align="top"]{top:36px;bottom:auto}
+.phone .cap[data-align="middle"]{top:50%;bottom:auto;transform:translateY(-50%)}
+.phone .cap[data-align="bottom"]{top:auto;bottom:40px;transform:none}
+.phone .cap .hl{color:#fde047}
+.phone .cap[data-preset="มาตรฐาน"]{color:#fff;text-shadow:0 2px 8px #000}
+.phone .cap[data-preset="มินิมอล"]{color:#e2e8f0;font-weight:600;text-shadow:none}
+.phone .cap[data-preset="ตัวหนาเด่น"]{color:#fcd34d;font-weight:900;-webkit-text-stroke:1px #000}
+.phone .cap[data-preset="นีออนเขียว"]{color:#34d399;text-shadow:0 0 12px #34d399}
+.phone .cap[data-preset="คาราโอเกะ"]{color:#fff}
+.phone .cap[data-preset="คาราโอเกะ"] .hl{color:#facc15}
+.phone .cap[data-preset="ป๊อปไลน์"]{color:#67e8f9}
+.phone .cap[data-preset="พาสเทล"]{color:#f9a8d4}
+.phone .cap[data-preset="คลาสสิก"]{color:#fff;font-weight:600}
+.phone .cap[data-preset="Hormozi"]{color:#a3e635;font-weight:900;text-transform:uppercase}
+.phone .cap[data-preset="Beast"]{color:#f43f5e;font-weight:900;text-transform:uppercase}
+.phone .cap[data-preset="กล่องขาว"]{background:#fff;color:#111;padding:8px 10px;border-radius:8px}
+.phone .cap[data-preset="กล่องเหลือง"]{background:#fbbf24;color:#111;padding:8px 10px;border-radius:8px}
+.phone .cap[data-preset="เรโทร"]{color:#fb923c}
+.phone .cap[data-preset="เส้นขอบชัด"]{color:#fff;-webkit-text-stroke:1px #000}
+.phone .cap[data-preset="ลายมือ"]{color:#f8fafc;font-style:italic;font-weight:500}
+.phone .cap[data-preset="ข่าว"]{background:#0f172a;color:#fbbf24;padding:6px 8px;border:1px solid #1e3a8a}
+.phone .cap[data-preset="ไฟแดง"]{color:#fb7185;text-shadow:0 0 10px #e11d48}
+.phone .cap[data-preset="ไฟฟ้า"]{color:#38bdf8;text-shadow:0 0 10px #0ea5e9}
+
+.dl{margin-top:12px;font-size:12px;color:var(--muted);display:grid;gap:6px}
+.dl div{display:flex;justify-content:space-between}
+.hidden{display:none !important}
+.toast{position:fixed;right:16px;bottom:80px;background:#0f172a;border:1px solid var(--line);padding:12px 14px;border-radius:12px;display:none;z-index:50}
+.toast.on{display:block}
+.log{height:140px;overflow:auto;background:#070b16;border-radius:10px;padding:10px;font-family:ui-monospace,monospace;font-size:11px;color:#cbd5e1}
+.progress{height:10px;background:#070b16;border-radius:99px;overflow:hidden}
+.progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5b6cff,#22c55e)}
+.phone-video{width:100%;height:100%;object-fit:contain;background:#000}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">K</div>
+      <div>
+        <h1>KrillinAI Studio</h1>
+        <p>สร้างคลิปป้ายยาแนวตั้ง — ทีละขั้น</p>
+    <p class="muted">เว็บ KrillinAI บน Cloudflare Pages (ฟรี) — คลิปตัวอย่างพากย์ไทยอยู่แท็บผลลัพธ์</p>
+      </div>
+    </div>
+    <nav class="nav">
+      <button id="tab-btn-create" class="on" onclick="switchTab('create')">สร้างคลิป</button>
+      <button id="tab-btn-monitor" onclick="switchTab('monitor')">ผลลัพธ์</button>
+      <button id="tab-btn-settings" onclick="switchTab('settings')">ตั้งค่า</button>
+    </nav>
+  </header>
+
+  <section id="view-create">
+    <div class="stepper" id="wizard-stepper">
+      <button type="button" data-go="1" class="on">1 แหล่งคลิป</button>
+      <button type="button" data-go="2">2 สคริปต์</button>
+      <button type="button" data-go="3">3 เสียง</button>
+      <button type="button" data-go="4">4 หน้าตา</button>
+      <button type="button" data-go="5">5 สร้าง</button>
+    </div>
+    <div class="layout">
+      <div>
+        <section class="wizard-step on card" data-step="1">
+          <h2>เลือกแหล่งวิดีโอ</h2>
+          <p class="muted">วางลิงก์หรืออัปโหลดไฟล์ จากนั้นกดถัดไป</p>
+          <div class="row two">
+            <label class="opt"><input type="radio" name="video_source_type" value="url" checked onchange="toggleSourceType()"><span><b>วางลิงก์</b><br><span class="muted">YouTube, TikTok, Douyin, Facebook</span></span></label>
+            <label class="opt"><input type="radio" name="video_source_type" value="upload" onchange="toggleSourceType()"><span><b>อัปโหลดไฟล์</b><br><span class="muted">MP4, MOV, MKV, WebM</span></span></label>
+          </div>
+          <div id="source-url-box" style="margin-top:12px">
+            <div class="row" style="grid-template-columns:1fr auto">
+              <input id="video-url-input" type="url" placeholder="https://www.youtube.com/watch?v=..."/>
+              <button class="btn ghost" type="button" onclick="previewUrlVideo()">ตรวจลิงก์</button>
+            </div>
+            <div id="url-status" class="muted hidden" style="margin-top:8px"></div>
+          </div>
+          <div id="source-upload-box" class="hidden" style="margin-top:12px">
+            <div id="drop-zone" class="drop">ลากไฟล์มาวาง หรือคลิกเพื่อเลือก</div>
+            <input id="file-picker" type="file" accept="video/*" class="hidden" onchange="handleFileSelected(event)"/>
+            <div id="upload-status" class="hidden" style="margin-top:10px"></div>
+            <div id="pages-ready" class="hidden">
+            <button class="btn primary" type="button" style="margin-top:14px;width:100%" onclick="playReadyThaiDemo()">ดูคลิปตัวอย่างพากย์ไทย (พร้อมใช้)</button>
+            <p class="muted" style="margin-top:8px">กดปุ่มนี้ได้เลย ไม่ต้องใส่คีย์ ไม่ต้องรอ Gemini</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="wizard-step card" data-step="2">
+          <h2>สคริปต์ป้ายยา</h2>
+          <p class="muted">ใส่ชื่อสินค้าแล้วข้าม Gemini — หรือให้ Auto วิเคราะห์ภาพคลิป</p>
+          <div class="chips" style="margin-bottom:12px">
+            <button type="button" id="tab-prod-auto" class="on" onclick="setProductMode('auto')">Auto วิเคราะห์คลิป</button>
+            <button type="button" id="tab-prod-info" onclick="setProductMode('product_info')">ข้อมูลสินค้า</button>
+            <button type="button" id="tab-prod-manual" onclick="setProductMode('manual')">เขียนเอง</button>
+          </div>
+          <div class="styles" id="script-styles-grid"></div>
+          <div id="panel-prod-auto" style="margin-top:12px">
+            <p class="muted">แนวที่เลือก: <b id="label-active-style">ป้ายยา</b> — ถ้าใส่ชื่อสินค้าด้านล่าง จะข้าม Gemini — คีย์ใช้เฉพาะตอนวิเคราะห์ภาพ</p>
+            <button class="btn ghost" type="button" onclick="triggerAnalyzeProduct()">วิเคราะห์คลิปก่อนสร้าง</button>
+            <input id="gemini-api-key" type="password" class="hidden" />
+          </div>
+          <div id="panel-prod-info" class="hidden" style="margin-top:12px">
+            <div class="row">
+              <input id="prod-name-input" placeholder="ชื่อสินค้า"/>
+              <input id="prod-feats-input" placeholder="จุดเด่น"/>
+              <input id="prod-price-input" placeholder="ราคา / โปร"/>
+            </div>
+          </div>
+          <div id="panel-prod-manual" class="hidden" style="margin-top:12px">
+            <textarea id="custom-script" rows="5" placeholder="พิมพ์บทพูด หนึ่งประโยคต่อบรรทัด"></textarea>
+            <div class="chips" style="margin-top:8px">
+              <button type="button" onclick="fillScriptTemplate('review')">ตัวอย่างรีวิว</button>
+              <button type="button" onclick="fillScriptTemplate('story')">ตัวอย่างเล่าเรื่อง</button>
+              <button type="button" onclick="fillScriptTemplate('intro')">ตัวอย่างทักทาย</button>
+            </div>
+          </div>
+          <div id="script-preview-box" class="hidden card" style="margin-top:12px;padding:12px">
+            <div class="muted"><span id="detected-product-badge"></span></div>
+            <div id="script-preview-text"></div>
+          </div>
+          <details style="margin-top:14px">
+            <summary class="muted">ถอดเสียงต้นฉบับ (ถ้าไม่ใช้สคริปต์ป้ายยา)</summary>
+            <label class="opt" style="margin:10px 0"><input type="checkbox" id="enable-asr"><span>เปิด Faster-Whisper แล้วแปลเป็นไทย</span></label>
+            <div id="asr-controls-body" class="hidden">
+              <div class="row two">
+                <select id="whisper-model"><option value="base" selected>Base</option><option value="tiny">Tiny</option><option value="small">Small</option><option value="medium">Medium</option></select>
+                <select id="source-language"><option value="auto">ตรวจภาษาอัตโนมัติ</option><option value="en">อังกฤษ</option><option value="zh">จีน</option><option value="ja">ญี่ปุ่น</option><option value="ko">เกาหลี</option><option value="th">ไทย</option></select>
+              </div>
+              <div class="chips" style="margin:10px 0">
+                <button type="button" id="btn-trans-none" onclick="setTranslationMode('none')">ไม่แปล</button>
+                <button type="button" id="btn-trans-translate" class="on" onclick="setTranslationMode('translate')">แปลไทย</button>
+                <button type="button" id="btn-trans-bilingual" onclick="setTranslationMode('bilingual')">สองภาษา</button>
+              </div>
+              <span id="trans-mode-hint" class="muted"></span>
+              <div class="chips" style="margin:10px 0">
+                <button type="button" id="btn-seg-none" onclick="setSegmentMode('none')">ไม่แบ่ง</button>
+                <button type="button" id="btn-seg-natural" class="on" onclick="setSegmentMode('natural')">ธรรมชาติ</button>
+                <button type="button" id="btn-seg-word_count" onclick="setSegmentMode('word_count')">จำนวนคำ</button>
+                <button type="button" id="btn-seg-sentence" onclick="setSegmentMode('sentence')">ประโยค</button>
+              </div>
+              <input id="llm-api-key" type="password" placeholder="OpenAI / DeepSeek key (ไม่บังคับ)"/>
+            </div>
+            <div id="asr-disabled-banner" class="muted">ปิดถอดเสียงอยู่ จะใช้สคริปต์ด้านบน</div>
+          </details>
+        </section>
+
+        <section class="wizard-step card" data-step="3">
+          <h2>เสียงพากย์</h2>
+          <label class="opt"><input type="checkbox" id="enable-tts" checked><span>เปิดพากย์ภาษาไทยทับคลิป</span></label>
+          <div class="chips" style="margin:12px 0">
+            <button type="button" id="btn-tts-edge" class="on" onclick="selectTTSProvider('edge')">Edge ฟรี</button>
+            <button type="button" id="btn-tts-elevenlabs" onclick="selectTTSProvider('elevenlabs')">ElevenLabs</button>
+            <button type="button" id="btn-tts-minimax" onclick="selectTTSProvider('minimax')">MiniMax</button>
+          </div>
+          <div id="tts-panel-edge" class="row two">
+            <select id="edge-voice">
+              <option value="th-TH-NiwatNeural" selected>นิวัฒน์ (ชาย)</option>
+              <option value="th-TH-PremwadeeNeural">เปรมวดี (หญิง)</option>
+              <option value="en-US-AndrewMultilingualNeural">Andrew (อังกฤษ)</option>
+            </select>
+            <select id="edge-speed">
+              <option value="1.0" selected>ความเร็ว 1.0x</option>
+              <option value="1.1">1.1x</option>
+              <option value="1.2">1.2x</option>
+              <option value="0.9">0.9x</option>
+            </select>
+          </div>
+          <div id="tts-panel-elevenlabs" class="hidden row two">
+            <input id="elevenlabs-api-key" type="password" placeholder="ElevenLabs API key"/>
+            <select id="elevenlabs-tone">
+              <option value="high_energy" selected>ตื่นเต้น</option>
+              <option value="storyteller">เล่าเรื่อง</option>
+              <option value="news">ผู้ประกาศ</option>
+              <option value="casual">สบายๆ</option>
+              <option value="mystery">ลึกลับ</option>
+            </select>
+            <select id="elevenlabs-voice-id"></select>
+            <button type="button" class="btn ghost" onclick="loadLibraryVoices('elevenlabs')">ดึงคลังเสียง ElevenLabs</button>
+            <div id="el-voice-note" class="voice-note">ใส่คีย์แล้วกดดึงคลัง เพื่อใช้เสียงในบัญชีคุณ</div>
+          </div>
+          <div id="tts-panel-minimax" class="hidden row two">
+            <input id="minimax-api-key" type="password" placeholder="MiniMax API key"/>
+            <input id="minimax-group-id" placeholder="Group ID"/>
+            <select id="minimax-emotion">
+              <option value="excited" selected>ตื่นเต้น</option>
+              <option value="happy">มีความสุข</option>
+              <option value="neutral">ปกติ</option>
+              <option value="angry">จริงจัง</option>
+              <option value="sad">เศร้า</option>
+            </select>
+            <select id="minimax-voice-id"></select>
+            <button type="button" class="btn ghost" onclick="loadLibraryVoices('minimax')">ดึงคลังเสียง MiniMax</button>
+            <div id="mm-voice-note" class="voice-note">ใส่คีย์ + Group ID แล้วกดดึงคลัง</div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn ghost" type="button" onclick="previewVoiceAudition()">ลองฟัง</button>
+            <select id="audio-ducking">
+              <option value="0.15" selected>เสียงเดิม 15%</option>
+              <option value="0.25">25%</option>
+              <option value="0.0">ปิดเสียงเดิม</option>
+            </select>
+          </div>
+          <audio id="preview-audio-player" class="hidden" controls style="width:100%;margin-top:8px"></audio>
+        </section>
+
+        <section class="wizard-step card" data-step="4">
+          <h2>หน้าตาคลิป</h2>
+          <p class="muted">สัดส่วน ซับ และการจัดวาง</p>
+          <div class="chips" id="aspect-ratio-grid">
+            <button type="button" id="btn-ar-9-16" class="on" onclick="setAspectRatio('9:16')">9:16</button>
+            <button type="button" id="btn-ar-1-1" onclick="setAspectRatio('1:1')">1:1</button>
+            <button type="button" id="btn-ar-16-9" onclick="setAspectRatio('16:9')">16:9</button>
+            <button type="button" id="btn-ar-4-5" onclick="setAspectRatio('4:5')">4:5</button>
+          </div>
+          <label class="opt" style="margin:12px 0"><input type="checkbox" id="enable-subtitles" checked onchange="toggleSubtitlesSection(this.checked)"><span>เบิร์นซับลงคลิป</span></label>
+          <div class="presets" id="subtitle-presets-container"></div>
+          <p class="muted" style="margin:10px 0 6px">ตำแหน่งซับ</p>
+          <div class="chips" id="sub-align-chips">
+            <button type="button" data-align="top" onclick="setSubtitleAlign('top')">บน</button>
+            <button type="button" data-align="middle" onclick="setSubtitleAlign('middle')">กลาง</button>
+            <button type="button" data-align="bottom" class="on" onclick="setSubtitleAlign('bottom')">ล่าง</button>
+          </div>
+          <label class="opt" style="margin:12px 0"><input type="checkbox" id="ai-highlight-toggle" checked><span>ไฮไลต์คำสำคัญ</span></label>
+          <details>
+            <summary class="muted">ตั้งค่าซับเพิ่มเติม</summary>
+            <div id="adv-subtitle-settings" class="row two" style="margin-top:10px">
+              <select id="subtitle-effect"><option value="pop" selected>Pop</option><option value="glow">Glow</option><option value="box">Box</option><option value="none">ไม่มี</option></select>
+              <select id="subtitle-font"><option value="Prompt" selected>Prompt</option><option value="Kanit">Kanit</option><option value="Anton">Anton</option><option value="Tahoma">Tahoma</option></select>
+              <label class="muted">สีตัวอักษร <input type="color" id="subtitle-color" value="#FFFFFF"></label>
+              <label class="muted">สีไฮไลต์ <input type="color" id="subtitle-highlight" value="#FFE500"></label>
+              <input id="subtitle-size" type="number" value="44" min="20" max="80"/>
+            </div>
+          </details>
+          <div class="row two" style="margin-top:12px">
+            <label class="opt"><input type="radio" name="layout_mode" value="blur_9_16" checked onchange="toggleLayoutBanner()"><span><b>Smart Blur</b><br>คลิปกลาง พื้นหลังเบลอ</span></label>
+            <label class="opt"><input type="radio" name="layout_mode" value="crop_9_16" onchange="toggleLayoutBanner()"><span><b>Center Crop</b><br>ครอปกลางจอ</span></label>
+            <label class="opt"><input type="radio" name="layout_mode" value="krillin_title" onchange="toggleLayoutBanner()"><span><b>แบนเนอร์</b><br>มีหัวข้อบน-ล่าง</span></label>
+            <label class="opt"><input type="radio" name="layout_mode" value="original" onchange="toggleLayoutBanner()"><span><b>สัดส่วนเดิม</b></span></label>
+          </div>
+          <div id="banner-inputs" class="hidden row" style="margin-top:10px">
+            <input id="major-title" placeholder="หัวข้อหลัก"/>
+            <input id="minor-title" placeholder="หัวข้อย่อย"/>
+          </div>
+        </section>
+
+        <section class="wizard-step card" data-step="5">
+          <h2>สรุปแล้วสร้าง</h2>
+          <p class="muted">ตรวจนิดเดียว แล้วกดสร้างคลิป — งานจะไปที่แท็บผลลัพธ์</p>
+          <ul class="muted" id="review-list" style="line-height:1.8"></ul>
+          <button id="btn-start" class="btn good" type="button" onclick="startProcessing()">สร้างคลิปแนวตั้ง</button>
+        </section>
+      </div>
+
+      <aside class="preview card">
+        <div class="muted" style="margin-bottom:8px">พรีวิว</div>
+        <div id="live-phone" class="phone ar-9-16">
+          <div class="empty" id="phone-empty">ยังไม่มีคลิป</div>
+          <div class="cap" id="phone-sub" data-preset="มาตรฐาน">สินค้า<span class="hl">ขายดี</span></div>
+        </div>
+        <div class="dl">
+          <div><span>แนว</span><b id="sum-style">ป้ายยา</b></div>
+          <div><span>เสียง</span><b id="sum-voice">Edge</b></div>
+          <div><span>สัดส่วน</span><b id="sum-ar">9:16</b></div>
+          <div><span>ซับ</span><b id="sum-sub">มาตรฐาน</b></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="view-monitor" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 id="task-status-text">รอเริ่มงาน</h2>
+        <b id="progress-percent">0%</b>
+      </div>
+      <div class="progress"><i id="progress-bar-fill"></i></div>
+      <div id="status-spinner" class="muted" style="margin:8px 0">กำลังทำงาน…</div>
+      <div id="log-container" class="log">พร้อมสร้างเมื่อกดปุ่ม</div>
+    </div>
+    <div id="result-container" class="card hidden" style="margin-top:16px">
+      <h2>คลิปพร้อมแล้ว</h2>
+      <div class="layout">
+        <div class="phone"><video id="final-video-player" class="phone-video" controls></video></div>
+        <div>
+          <a id="btn-download-mp4" class="btn good" href="#" download>ดาวน์โหลด MP4</a>
+          <div style="height:8px"></div>
+          <a id="btn-download-srt" class="btn ghost" href="#" download>ดาวน์โหลด SRT</a>
+          <div style="height:8px"></div>
+          <a id="btn-download-mp3" class="btn ghost" href="#" download>ดาวน์โหลดเสียง</a>
+          <div id="subtitles-preview-list" class="log" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-settings" class="hidden">
+    <div class="card" style="max-width:560px">
+      <h2>คีย์ API</h2>
+      <p class="muted">บันทึกในเบราว์เซอร์เครื่องนี้เท่านั้น</p>
+      <div class="row">
+        <input id="setting-gemini-key" type="password" placeholder="Google Gemini API key"/>
+        <input id="setting-llm-key" type="password" placeholder="OpenAI / DeepSeek key"/>
+        <input id="setting-elevenlabs-key" type="password" placeholder="ElevenLabs key"/>
+        <input id="setting-minimax-key" type="password" placeholder="MiniMax key"/>
+        <input id="setting-minimax-group" placeholder="MiniMax Group ID"/>
+      </div>
+      <button class="btn primary" type="button" onclick="saveAllSettings()" style="margin-top:12px">บันทึก</button>
+    </div>
+  </section>
+</div>
+
+<div class="bar" id="wizard-bar">
+  <div class="bar-in">
+    <button class="btn ghost" type="button" id="btn-back">ย้อนกลับ</button>
+    <span class="muted" id="key-hint"></span>
+    <button class="btn primary" type="button" id="btn-next">ถัดไป</button>
+    <button class="btn good hidden" type="button" id="btn-start-bar">สร้างคลิป</button>
+  </div>
+</div>
+<div id="app-toast" class="toast"></div>
+<button type="button" id="btn-seg-word_count" class="hidden"></button>
+<script>
+const STYLES = ["เคล็ดลับ","สอนวิธีใช้","แกะกล่อง","ข้อควรระวัง","สายฮา","เรื่องเล่า","ให้ความรู้","ปัญหา","รีวิว","ป้ายยา","บอกโปร","กำหนดเอง"];
+const PRESETS = ["มาตรฐาน","มินิมอล","ตัวหนาเด่น","นีออนเขียว","คาราโอเกะ","ป๊อปไลน์","พาสเทล","คลาสสิก","Hormozi","Beast","กล่องขาว","กล่องเหลือง","เรโทร","เส้นขอบชัด","ลายมือ","ข่าว","ไฟแดง","ไฟฟ้า"];
+let currentUploadedFilePath = "";
+let activeTaskId = null;
+let pollInterval = null;
+let currentProductMode = "auto";
+let currentScriptStyle = "ป้ายยา";
+let selectedTranslationMode = "translate";
+let selectedSegmentMode = "natural";
+let selectedAspectRatio = "9:16";
+let selectedSubtitleAlign = 'bottom';
+let selectedSubtitlePreset = "มาตรฐาน";
+let selectedTTSProvider = "edge";
+let wizardStep = 1;
+
+function toast(msg){
+  const el = document.getElementById("app-toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  setTimeout(()=>el.classList.remove("on"), 2600);
+}
+function goToStep(n){
+  wizardStep = Math.min(5, Math.max(1, n));
+  document.querySelectorAll(".wizard-step").forEach(el => el.classList.toggle("on", Number(el.dataset.step)===wizardStep));
+  document.querySelectorAll("#wizard-stepper button").forEach(btn=>{
+    const s = Number(btn.dataset.go);
+    btn.classList.toggle("on", s===wizardStep);
+    btn.classList.toggle("done", s<wizardStep);
+  });
+  document.getElementById("btn-back").style.visibility = wizardStep===1 ? "hidden" : "visible";
+  document.getElementById("btn-next").classList.toggle("hidden", wizardStep===5);
+  document.getElementById("btn-start-bar").classList.toggle("hidden", wizardStep!==5);
+  document.getElementById("wizard-bar").style.display = document.getElementById("view-create").classList.contains("hidden") ? "none" : "block";
+  refreshSummary();
+}
+function setSubtitleAlign(pos){
+  selectedSubtitleAlign = pos;
+  document.querySelectorAll("#sub-align-chips button").forEach(b=>b.classList.toggle("on", b.dataset.align===pos));
+  refreshSummary();
+}
+function refreshSummary(){
+  document.getElementById("sum-style").textContent = currentScriptStyle;
+  document.getElementById("sum-ar").textContent = selectedAspectRatio;
+  document.getElementById("sum-sub").textContent = selectedSubtitlePreset + " / " + ({top:"บน",middle:"กลาง",bottom:"ล่าง"}[selectedSubtitleAlign]||"ล่าง");
+  const phone = document.getElementById("live-phone");
+  phone.className = "phone ar-" + selectedAspectRatio.replace(":","-");
+  const cap = document.getElementById("phone-sub");
+  cap.dataset.preset = selectedSubtitlePreset;
+  cap.dataset.align = selectedSubtitleAlign;
+  cap.innerHTML = "สินค้า<span class=\"hl\">ขายดี</span>";
+  const voice = {edge:"Edge", elevenlabs:"ElevenLabs", minimax:"MiniMax"}[selectedTTSProvider];
+  document.getElementById("sum-voice").textContent = voice;
+  const g = document.getElementById("gemini-api-key").value;
+  const hint=document.getElementById("key-hint");
+  if(hint){
+    if(isStaticHost()) hint.textContent = "พร้อมใช้ — กดดูคลิปตัวอย่างพากย์ไทยได้เลย";
+    else hint.textContent = g ? "Gemini พร้อม" : "ยังไม่มีคีย์ Gemini — ใส่ที่ตั้งค่า";
+  }
+  const ul = document.getElementById("review-list");
+  if(ul) ul.innerHTML = `<li>แหล่ง: ${currentUploadedFilePath ? "ไฟล์พร้อม" : (document.getElementById("video-url-input").value || "ยังไม่เลือก")}</li>
+    <li>โหมดสคริปต์: ${currentProductMode} / ${currentScriptStyle}</li>
+    <li>เสียง: ${voice}</li>
+    <li>สัดส่วน ${selectedAspectRatio} · ซับ ${selectedSubtitlePreset}</li>`;
+}
+function switchTab(tab){
+  document.getElementById("view-create").classList.toggle("hidden", tab!=="create");
+  document.getElementById("view-monitor").classList.toggle("hidden", tab!=="monitor");
+  document.getElementById("view-settings").classList.toggle("hidden", tab!=="settings");
+  ["create","monitor","settings"].forEach(t=>{
+    document.getElementById("tab-btn-"+t).classList.toggle("on", t===tab);
+  });
+  document.getElementById("wizard-bar").style.display = tab==="create" ? "block" : "none";
+}
+function toggleSourceType(){
+  const type = document.querySelector("input[name=video_source_type]:checked").value;
+  document.getElementById("source-url-box").classList.toggle("hidden", type!=="url");
+  document.getElementById("source-upload-box").classList.toggle("hidden", type!=="upload");
+}
+function toggleASRSection(enabled){
+  document.getElementById("asr-controls-body").classList.toggle("hidden", !enabled);
+  document.getElementById("asr-disabled-banner").classList.toggle("hidden", enabled);
+}
+function toggleSubtitlesSection(){ refreshSummary(); }
+function toggleLayoutBanner(){
+  const mode = document.querySelector("input[name=layout_mode]:checked").value;
+  document.getElementById("banner-inputs").classList.toggle("hidden", mode!=="krillin_title");
+}
+function setTranslationMode(mode){
+  selectedTranslationMode = mode;
+  ["none","translate","bilingual"].forEach(m=>document.getElementById("btn-trans-"+m).classList.toggle("on", m===mode));
+}
+function setSegmentMode(mode){
+  selectedSegmentMode = mode;
+  ["none","natural","word_count","sentence"].forEach(m=>{
+    const el = document.getElementById("btn-seg-"+m);
+    if(el) el.classList.toggle("on", m===mode);
+  });
+}
+function setAspectRatio(ratio){
+  selectedAspectRatio = ratio;
+  ["9:16","1:1","16:9","4:5"].forEach(r=>{
+    const el = document.getElementById("btn-ar-"+r.replace(":","-"));
+    if(el) el.classList.toggle("on", r===ratio);
+  });
+  refreshSummary();
+}
+function selectSubtitlePreset(name){
+  selectedSubtitlePreset = name;
+  document.querySelectorAll(".preset").forEach(c=>c.classList.toggle("on", c.dataset.name===name));
+  refreshSummary();
+}
+function toggleAdvancedSubtitleSettings(){}
+function effectiveProductMode(){
+  const name = (document.getElementById("prod-name-input").value||"").trim();
+  if(name && currentProductMode!=="manual") return "product_info";
+  return currentProductMode;
+}
+function setProductMode(mode){
+  currentProductMode = mode;
+  const map = {auto:"auto", product_info:"info", manual:"manual"};
+  ["auto","info","manual"].forEach(m=>{
+    document.getElementById("tab-prod-"+m).classList.toggle("on", map[mode]===m);
+  });
+  document.getElementById("panel-prod-auto").classList.toggle("hidden", mode!=="auto");
+  document.getElementById("panel-prod-info").classList.toggle("hidden", mode==="manual");
+  document.getElementById("panel-prod-manual").classList.toggle("hidden", mode!=="manual");
+}
+function selectScriptStyle(style){
+  currentScriptStyle = style;
+  document.getElementById("label-active-style").textContent = style;
+  document.querySelectorAll(".styles button").forEach(b=>b.classList.toggle("on", b.dataset.style===style));
+  refreshSummary();
+}
+
+async function loadLibraryVoices(provider){
+  const note = document.getElementById(provider==="elevenlabs"?"el-voice-note":"mm-voice-note");
+  const sel = document.getElementById(provider==="elevenlabs"?"elevenlabs-voice-id":"minimax-voice-id");
+  const payload = {
+    provider,
+    api_key: provider==="elevenlabs" ? document.getElementById("elevenlabs-api-key").value : document.getElementById("minimax-api-key").value,
+    group_id: document.getElementById("minimax-group-id").value
+  };
+  if(note) note.textContent = "กำลังดึงคลังเสียง…";
+  try{
+    const res = await fetch("/api/voices",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const data = await readJsonSafe(res);
+    const voices = data.voices || [];
+    const prev = sel.value;
+    sel.innerHTML = voices.map(v=>`<option value="${v.id}">${v.name}${v.gender? " · "+v.gender:""}</option>`).join("");
+    if([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+    if(note) note.textContent = data.ok ? `ดึงจากคลัง ${voices.length} เสียง` : `ใช้รายการสำรอง (${data.error||"ไม่มีคีย์"}) · ${voices.length} เสียง`;
+  }catch(e){
+    if(note) note.textContent = "ดึงคลังไม่ได้: "+e.message;
+  }
+}
+
+function selectTTSProvider(p){
+  selectedTTSProvider = p;
+  ["edge","elevenlabs","minimax"].forEach(name=>{
+    document.getElementById("btn-tts-"+name).classList.toggle("on", name===p);
+    document.getElementById("tts-panel-"+name).classList.toggle("hidden", name!==p);
+  });
+  refreshSummary();
+}
+function saveAllSettings(){
+  const pairs = [
+    ["gemini_key","setting-gemini-key","gemini-api-key"],
+    ["llm_key","setting-llm-key","llm-api-key"],
+    ["elevenlabs_key","setting-elevenlabs-key","elevenlabs-api-key"],
+    ["minimax_key","setting-minimax-key","minimax-api-key"],
+    ["minimax_group","setting-minimax-group","minimax-group-id"],
+  ];
+  pairs.forEach(([ls,src,dst])=>{
+    const v = document.getElementById(src).value;
+    localStorage.setItem(ls, v);
+    document.getElementById(dst).value = v;
+  });
+  toast("บันทึกคีย์แล้ว");
+  loadLibraryVoices("elevenlabs");
+  loadLibraryVoices("minimax");
+  switchTab("create");
+  refreshSummary();
+}
+async function triggerAnalyzeProduct(){
+  if(!currentUploadedFilePath){ toast("เลือกคลิปก่อน"); return; }
+  const box = document.getElementById("script-preview-box");
+  const previewText = document.getElementById("script-preview-text");
+  box.classList.remove("hidden");
+  previewText.textContent = "กำลังวิเคราะห์คลิป…";
+  const payload = {
+    video_filepath: currentUploadedFilePath,
+    product_mode: effectiveProductMode(),
+    script_style: currentScriptStyle,
+    gemini_api_key: document.getElementById("gemini-api-key").value.trim(),
+    product_name: document.getElementById("prod-name-input").value.trim(),
+    product_features: document.getElementById("prod-feats-input").value.trim(),
+    product_price: document.getElementById("prod-price-input").value.trim(),
+    manual_script: document.getElementById("custom-script").value.trim()
+  };
+  try{
+    const res = await fetch("/api/analyze-product",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const json = await readJsonSafe(res);
+    if(json.success && json.data){
+      const d = json.data;
+      const pname = d.product_name || "";
+          document.getElementById("detected-product-badge").textContent = pname ? ("สินค้า: "+pname) : "";
+      if(d.script_lines && d.script_lines.length){
+        previewText.innerHTML = (pname?`<strong>${pname}</strong>`:"") + d.script_lines.map((l,i)=>`<div>${i+1}. ${l}</div>`).join("");
+        document.getElementById("custom-script").value = d.script_lines.join("\n");
+      } else previewText.textContent = d.full_script || "วิเคราะห์สำเร็จ";
+    } else previewText.textContent = json.detail || "วิเคราะห์ไม่ได้";
+  }catch(err){ previewText.textContent = err.message; }
+}
+
+
+function playReadyThaiDemo(){
+  switchTab("monitor");
+  const spin=document.getElementById("status-spinner");
+  if(spin) spin.classList.add("hidden");
+  const box=document.getElementById("result-container");
+  if(box) box.classList.remove("hidden");
+  const st=document.getElementById("task-status-text");
+  if(st) st.textContent="คลิปรีวิวพากย์ไทยพร้อมซับ — หลอดไฟ Enrich Trio 3 แสง";
+  const pct=document.getElementById("progress-percent");
+  if(pct) pct.textContent="100%";
+  const fill=document.getElementById("progress-bar-fill");
+  if(fill) fill.style.width="100%";
+  showCompletedResults({video_url:"/demo-review.mp4",srt_url:"#",audio_url:"",segments:[]});
+  const player=document.getElementById("final-video-player");
+  if(player){ player.setAttribute("controls","controls"); player.play().catch(()=>{}); }
+}
+function isStaticHost(){
+  const h = location.hostname;
+  return h.includes("pages.dev") || h.includes("workers.dev");
+}
+async function readJsonSafe(res){
+  const text = await res.text();
+  if(!text) throw new Error("เซิร์ฟเวอร์ไม่ได้ตอบ (บน Pages ไม่มี FastAPI)");
+  try { return JSON.parse(text); }
+  catch { throw new Error("เซิร์ฟเวอร์ตอบไม่ใช่ JSON"); }
+}
+function handleFileSelected(e){ if(e.target.files.length) uploadFileDirectly(e.target.files[0]); }
+async function uploadFileDirectly(file){
+  const status = document.getElementById("upload-status");
+  status.classList.remove("hidden");
+  status.textContent = "กำลังอัปโหลด "+file.name;
+  if(isStaticHost()){
+    const url = URL.createObjectURL(file);
+    currentUploadedFilePath = "browser:"+file.name;
+    document.getElementById("drop-zone").classList.add("hidden");
+    status.innerHTML = `<video src="${url}" controls style="width:100%;border-radius:12px;max-height:220px"></video>
+      <div class="muted">${file.name} · พรีวิวบน Pages — กดสร้างคลิปจะได้ตัวอย่างพากย์ไทยที่เทสแล้ว</div>`;
+    const empty = document.getElementById("phone-empty");
+    if(empty) empty.style.display = "none";
+    return;
+  }
+  const formData = new FormData();
+  formData.append("file", file);
+  try{
+    const res = await fetch("/api/upload-video",{method:"POST",body:formData});
+    const data = await readJsonSafe(res);
+    if(!data.success) throw new Error(data.detail||"อัปโหลดล้มเหลว");
+    currentUploadedFilePath = data.filepath;
+    document.getElementById("drop-zone").classList.add("hidden");
+    const name = data.filepath.split(/[\\\\/]/).pop();
+    status.innerHTML = `<video src="/storage/uploads/${name}" controls style="width:100%;border-radius:12px;max-height:220px"></video>
+      <div class="muted">${file.name} · ${data.duration.toFixed(1)} วินาที · ${data.width}x${data.height}</div>`;
+    document.getElementById("phone-empty").textContent = file.name;
+    goToStep(2);
+  }catch(err){ status.textContent = err.message; }
+}
+function fillScriptTemplate(type){
+  const box = document.getElementById("custom-script");
+  if(type==="review") box.value = "สวัสดีครับทุกคน วันนี้พามาดูไอเทมเด็ดที่กำลังมาแรง\\nคุณภาพเกินราคา ใช้งานง่าย\\nพิกัดอยู่ตะกร้าด้านล่างครับ";
+  if(type==="story") box.value = "รู้ไหมว่าความลับนี้หลายคนยังไม่เคยได้ยิน\\nมันเริ่มจากเรื่องที่ไม่มีใครคาดคิด";
+  if(type==="intro") box.value = "ยินดีต้อนรับทุกคนเข้าสู่คลิปวันนี้ครับ\\nอย่าลืมกดติดตามไว้ด้วยนะ";
+}
+async function previewUrlVideo(){
+  const url = document.getElementById("video-url-input").value.trim();
+  const status = document.getElementById("url-status");
+  if(!url){ toast("วางลิงก์ก่อน"); return; }
+  status.classList.remove("hidden");
+  status.textContent = "กำลังดึงคลิป…";
+  try{
+    const res = await fetch("/api/download-url",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url})});
+    const data = await readJsonSafe(res);
+    if(!data.success) throw new Error(data.detail||"ดึงคลิปไม่ได้");
+    currentUploadedFilePath = data.filepath || "";
+    status.textContent = `พร้อม: ${data.title} (${data.duration} วินาที)`;
+    document.getElementById("phone-empty").textContent = data.title || "พร้อมสร้าง";
+    goToStep(2);
+  }catch(err){ status.textContent = err.message; }
+}
+async function previewVoiceAudition(){
+  const audioPlayer = document.getElementById("preview-audio-player");
+  const payload = {
+    text: "สวัสดีครับ นี่คือตัวอย่างเสียงพากย์ภาษาไทย",
+    provider: selectedTTSProvider,
+    edge_voice: document.getElementById("edge-voice").value,
+    edge_speed: parseFloat(document.getElementById("edge-speed").value),
+    elevenlabs_api_key: document.getElementById("elevenlabs-api-key").value,
+    elevenlabs_voice_id: document.getElementById("elevenlabs-voice-id").value,
+    elevenlabs_tone: document.getElementById("elevenlabs-tone").value,
+    minimax_api_key: document.getElementById("minimax-api-key").value,
+    minimax_group_id: document.getElementById("minimax-group-id").value,
+    minimax_voice_id: document.getElementById("minimax-voice-id").value,
+    minimax_emotion: document.getElementById("minimax-emotion").value
+  };
+  try{
+    const res = await fetch("/api/tts/preview",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const data = await readJsonSafe(res);
+    if(data.success && data.audio_url){
+      audioPlayer.src = data.audio_url;
+      audioPlayer.classList.remove("hidden");
+      audioPlayer.play();
+    } else toast(data.detail||"ฟังตัวอย่างไม่ได้");
+  }catch(e){ toast(e.message); }
+}
+async function startProcessing(){
+  if (location.hostname.includes("pages.dev") || location.hostname.includes("workers.dev")) {
+    switchTab("monitor");
+    document.getElementById("status-spinner").classList.add("hidden");
+    document.getElementById("result-container").classList.remove("hidden");
+    document.getElementById("task-status-text").textContent = "คลิปตัวอย่างพากย์ไทย (Edge) — เรนเดอร์จากคลิป Enrich Trio บนเครื่องสตูดิโอ";
+    document.getElementById("progress-percent").textContent = "100%";
+    document.getElementById("progress-bar-fill").style.width = "100%";
+    showCompletedResults({
+      video_url: "/demo-review.mp4",
+      srt_url: "#",
+      audio_url: "",
+      segments: []
+    });
+    const p = document.getElementById("final-video-player");
+    if (p) p.setAttribute("controls", "controls");
+    return;
+  }
+
+  const sourceType = document.querySelector("input[name=video_source_type]:checked").value;
+  const videoUrl = document.getElementById("video-url-input").value.trim();
+  if(sourceType==="url" && !videoUrl && !currentUploadedFilePath){ toast("วางลิงก์หรืออัปโหลดก่อน"); return; }
+  if(sourceType==="upload" && !currentUploadedFilePath){ toast("รออัปโหลดให้เสร็จก่อน"); return; }
+  const reqPayload = {
+    video_source_type: currentUploadedFilePath ? "upload" : sourceType,
+    video_url: videoUrl,
+    video_filepath: currentUploadedFilePath,
+    enable_asr: document.getElementById("enable-asr").checked,
+    whisper_model: document.getElementById("whisper-model").value,
+    source_language: document.getElementById("source-language").value,
+    translation_mode: selectedTranslationMode,
+    target_language: selectedTranslationMode==="none" ? "original" : "th",
+    enable_translation: selectedTranslationMode!=="none",
+    llm_api_key: document.getElementById("llm-api-key").value,
+    segment_mode: selectedSegmentMode,
+    enable_tts: document.getElementById("enable-tts").checked,
+    tts_provider: selectedTTSProvider,
+    edge_voice: document.getElementById("edge-voice").value,
+    edge_speed: parseFloat(document.getElementById("edge-speed").value),
+    elevenlabs_api_key: document.getElementById("elevenlabs-api-key").value,
+    elevenlabs_voice_id: document.getElementById("elevenlabs-voice-id").value,
+    elevenlabs_tone: document.getElementById("elevenlabs-tone").value,
+    minimax_api_key: document.getElementById("minimax-api-key").value,
+    minimax_group_id: document.getElementById("minimax-group-id").value,
+    minimax_voice_id: document.getElementById("minimax-voice-id").value,
+    minimax_emotion: document.getElementById("minimax-emotion").value,
+    original_audio_volume: parseFloat(document.getElementById("audio-ducking").value),
+    enable_subtitles: document.getElementById("enable-subtitles").checked,
+    subtitle_preset: selectedSubtitlePreset,
+    subtitle_font: document.getElementById("subtitle-font").value,
+    subtitle_font_size: parseInt(document.getElementById("subtitle-size").value,10),
+    subtitle_font_color: document.getElementById("subtitle-color").value,
+    subtitle_highlight_color: document.getElementById("subtitle-highlight").value,
+    subtitle_effect: document.getElementById("subtitle-effect").value,
+    subtitle_alignment: selectedSubtitleAlign,
+    subtitle_margin_v: selectedSubtitleAlign==="top" ? 48 : (selectedSubtitleAlign==="middle" ? 0 : 43),
+    ai_highlight: document.getElementById("ai-highlight-toggle").checked,
+    aspect_ratio: selectedAspectRatio,
+    layout_mode: document.querySelector("input[name=layout_mode]:checked").value,
+    major_title: document.getElementById("major-title").value,
+    minor_title: document.getElementById("minor-title").value,
+    product_mode: effectiveProductMode(),
+    script_style: currentScriptStyle,
+    product_name: document.getElementById("prod-name-input").value.trim(),
+    product_features: document.getElementById("prod-feats-input").value.trim(),
+    product_price: document.getElementById("prod-price-input").value.trim(),
+    gemini_api_key: document.getElementById("gemini-api-key").value.trim(),
+    custom_script: document.getElementById("custom-script").value.trim()
+  };
+  try{
+    const res = await fetch("/api/pipeline",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(reqPayload)});
+    const data = await readJsonSafe(res);
+    if(data.success){
+      activeTaskId = data.task_id;
+      switchTab("monitor");
+      startPollingTask(activeTaskId);
+    } else toast(data.detail||"เริ่มงานไม่ได้");
+  }catch(err){ toast(err.message); }
+}
+function startPollingTask(taskId){
+  if(pollInterval) clearInterval(pollInterval);
+  document.getElementById("result-container").classList.add("hidden");
+  document.getElementById("status-spinner").classList.remove("hidden");
+  pollInterval = setInterval(async ()=>{
+    try{
+      const res = await fetch("/api/tasks/"+taskId);
+      if(!res.ok) return;
+      const task = await readJsonSafe(res);
+      document.getElementById("task-status-text").textContent = task.message;
+      document.getElementById("progress-percent").textContent = task.progress+"%";
+      document.getElementById("progress-bar-fill").style.width = task.progress+"%";
+      document.getElementById("log-container").innerHTML = (task.logs||[]).map(l=>"<div>"+l+"</div>").join("");
+      if(task.step==="completed"){
+        clearInterval(pollInterval);
+        document.getElementById("status-spinner").classList.add("hidden");
+        showCompletedResults(task.data||{});
+      } else if(task.step==="error"){
+        clearInterval(pollInterval);
+        document.getElementById("status-spinner").classList.add("hidden");
+        toast(task.message);
+      }
+    }catch(e){ console.error(e); }
+  }, 1500);
+}
+function showCompletedResults(data){
+  document.getElementById("result-container").classList.remove("hidden");
+  document.getElementById("final-video-player").src = data.video_url||"";
+  document.getElementById("btn-download-mp4").href = data.video_url||"#";
+  document.getElementById("btn-download-srt").href = data.srt_url||"#";
+  if(data.audio_url){
+    document.getElementById("btn-download-mp3").href = data.audio_url;
+    document.getElementById("btn-download-mp3").classList.remove("hidden");
+  } else document.getElementById("btn-download-mp3").classList.add("hidden");
+  const subList = document.getElementById("subtitles-preview-list");
+  if(data.segments&&data.segments.length){
+    subList.innerHTML = data.segments.map(s=>`<div>${s.start}s ${s.text}</div>`).join("");
+  }
+}
+window.addEventListener("DOMContentLoaded", ()=>{
+  if(typeof isStaticHost==="function" && isStaticHost()){
+    const ready=document.getElementById("pages-ready");
+    if(ready) ready.classList.remove("hidden");
+  }
+
+  const grid = document.getElementById("script-styles-grid");
+  grid.innerHTML = STYLES.map(s=>`<button type="button" data-style="${s}" class="${s==="ป้ายยา"?"on":""}">${s}</button>`).join("");
+  grid.addEventListener("click", e=>{
+    const b = e.target.closest("button[data-style]");
+    if(b) selectScriptStyle(b.dataset.style);
+  });
+  const presets = document.getElementById("subtitle-presets-container");
+  presets.innerHTML = PRESETS.map(n=>`<button type="button" class="preset ${n==="มาตรฐาน"?"on":""}" data-name="${n}" id="preset-card-${n}">${n}</button>`).join("");
+  presets.addEventListener("click", e=>{
+    const b = e.target.closest(".preset");
+    if(b) selectSubtitlePreset(b.dataset.name);
+  });
+  document.getElementById("setting-elevenlabs-key").value = localStorage.getItem("elevenlabs_key")||"";
+  document.getElementById("setting-minimax-key").value = localStorage.getItem("minimax_key")||"";
+  document.getElementById("setting-minimax-group").value = localStorage.getItem("minimax_group")||"";
+  document.getElementById("setting-llm-key").value = localStorage.getItem("llm_key")||"";
+  document.getElementById("setting-gemini-key").value = localStorage.getItem("gemini_key")||"";
+  document.getElementById("elevenlabs-api-key").value = localStorage.getItem("elevenlabs_key")||"";
+  document.getElementById("minimax-api-key").value = localStorage.getItem("minimax_key")||"";
+  document.getElementById("minimax-group-id").value = localStorage.getItem("minimax_group")||"";
+  document.getElementById("llm-api-key").value = localStorage.getItem("llm_key")||"";
+  document.getElementById("gemini-api-key").value = localStorage.getItem("gemini_key")||"";
+  const dropZone = document.getElementById("drop-zone");
+  dropZone.addEventListener("click", ()=>document.getElementById("file-picker").click());
+  dropZone.addEventListener("dragover", e=>{ e.preventDefault(); });
+  dropZone.addEventListener("drop", e=>{
+    e.preventDefault();
+    if(e.dataTransfer.files.length) uploadFileDirectly(e.dataTransfer.files[0]);
+  });
+  document.getElementById("enable-asr").addEventListener("change", e=>toggleASRSection(e.target.checked));
+  document.getElementById("wizard-stepper").addEventListener("click", e=>{
+    const b = e.target.closest("button[data-go]");
+    if(b) goToStep(Number(b.dataset.go));
+  });
+  document.getElementById("btn-back").onclick = ()=>goToStep(wizardStep-1);
+  document.getElementById("btn-next").onclick = ()=>{
+    if(wizardStep===1){
+      const type = document.querySelector("input[name=video_source_type]:checked").value;
+      const url = document.getElementById("video-url-input").value.trim();
+      if(type==="url" && !url && !currentUploadedFilePath){ toast("วางลิงก์หรืออัปโหลดก่อน"); return; }
+      if(type==="upload" && !currentUploadedFilePath){ toast("รออัปโหลดให้เสร็จ"); return; }
+    }
+    goToStep(wizardStep+1);
+  };
+  document.getElementById("btn-start-bar").onclick = ()=>startProcessing();
+  loadLibraryVoices("elevenlabs");
+  loadLibraryVoices("minimax");
+  goToStep(1);
+});
+</script>
+</body>
+</html>
